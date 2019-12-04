@@ -125,15 +125,20 @@ class wordclock_display:
         """
         brightness_before = self.getBrightness()
         brightness = max(min(255, brightness), 0)
-        if not self.developer_mode:
-            for i in range(self.wcl.LED_COUNT):
-                neoPixelColor = self.strip.getPixelColor(i)
-                blue = ((neoPixelColor & 255)/brightness_before) * brightness
-                green = (((neoPixelColor >> 8) & 255)/brightness_before) * brightness
-                red = (((neoPixelColor >> 16) & 255)/brightness_before) * brightness
-            
-                color = wcc.Color(red, green, blue)
-                self.strip.setPixelColor(i, color.neopixel())
+        if self.developer_mode:
+            if brightness_before > 0:
+                for i in range(self.wcl.LED_COUNT):
+                    neoPixelColor = self.strip.getPixelColor(i)
+                    blue = ((neoPixelColor & 255)/brightness_before) * brightness
+                    green = (((neoPixelColor >> 8) & 255)/brightness_before) * brightness
+                    red = (((neoPixelColor >> 16) & 255)/brightness_before) * brightness
+                
+                    color = wcc.Color(red, green, blue)
+                    self.strip.setPixelColor(i, color.neopixel())
+            else:
+                color = wcc.Color(0, 0, 0)
+                for i in range(self.wcl.LED_COUNT):
+                    self.strip.setPixelColor(i, color.neopixel())
         else:
             self.strip.setBrightness(brightness)
         self.brightness = brightness
