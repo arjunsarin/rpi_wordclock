@@ -128,7 +128,6 @@ class wordclock_display:
         if not self.developer_mode:
             for i in range(self.wcl.LED_COUNT):
                 neoPixelColor = self.strip.getPixelColor(i)
-                print(neoPixelColor)
                 blue = ((neoPixelColor & 255)/brightness_before) * brightness
                 green = (((neoPixelColor >> 8) & 255)/brightness_before) * brightness
                 red = (((neoPixelColor >> 16) & 255)/brightness_before) * brightness
