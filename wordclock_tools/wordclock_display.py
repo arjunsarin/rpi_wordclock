@@ -195,6 +195,7 @@ class wordclock_display:
             for m in range(4):
                 self.transition_cache_next.minutes[m] = color
 
+
     def setColorTemperatureToAll(self, temperature, includeMinutes=True):
         """
         Sets a color to all leds based on the provided temperature in Kelvin
@@ -332,14 +333,16 @@ class wordclock_display:
             self.transition_cache_curr = self.transition_cache_next
             self.render_transition_step(self.transition_cache_next)
         else:
-            transition_cache = deepcopy(self.transition_cache_curr)
-
-            brightness = self.getBrightness()
-            while self.getBrightness() > 0:
-                self.setBrightness(self.getBrightness() - 1)
-                sleep(1/fps)
-
             self.transition_cache_curr = self.transition_cache_next
             self.render_transition_step(self.transition_cache_curr)
+            # transition_cache = deepcopy(self.transition_cache_curr)
+
+            # brightness = self.getBrightness()
+            # while self.getBrightness() > 0:
+            #     self.setBrightness(self.getBrightness() - 1)
+            #     sleep(1/fps)
+
+            # self.transition_cache_curr = self.transition_cache_next
+            # self.render_transition_step(self.transition_cache_curr)
 
 
