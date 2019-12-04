@@ -101,9 +101,10 @@ class WXstrip():
     
     def setPixelColor(self, index, color):
         self.colors[int(index)] = color
-        #if(self.w != None):
-            
-    
+
+    def getPixelColor(self, index):
+        return self.colors[index].neopixel()
+
     def update(self):  
         
         if(self.w != None):

@@ -3,6 +3,7 @@ import ConfigParser
 from importlib import import_module
 import netifaces
 import inspect
+import logging
 import os
 import time
 import threading
@@ -10,6 +11,30 @@ from shutil import copyfile
 import wordclock_tools.wordclock_display as wcd
 import wordclock_interfaces.event_handler as wci
 import wordclock_interfaces.web_interface as wciweb
+
+
+# Get wordclock configuration from config-file
+def loadConfig (basePath):
+    pathToConfigFile = basePath + '/wordclock_config/wordclock_config.cfg'
+    if not os.path.exists(pathToConfigFile):
+        pathToConfigFileExample = basePath + '/wordclock_config/wordclock_config.example.cfg'
+        if not os.path.exists(pathToConfigFileExample):
+            logging.error('No config-file available!')
+            logging.error('  Expected ' + pathToConfigFile + ' or ' + pathToConfigFileExample)
+            raise Exception('Missing config-file')
+        copyfile(pathToConfigFileExample, pathToConfigFile)
+        logging.warning('No config-file specified! Was created from example-config!')
+    logging.info('Parsing ' + pathToConfigFile)
+    config = ConfigParser.ConfigParser()
+    config.read(pathToConfigFile)
+
+    # Add to the loaded configuration the current base path to provide it
+    # to other classes/plugins for further usage
+    config.set('wordclock', 'base_path', basePath)
+
+    return config
+
+
 
 class wordclock:
     """
@@ -20,6 +45,7 @@ class wordclock:
         """
         Initializations, executed at every startup of the wordclock
         """
+
         # Get path of the directory where this file is stored
         self.basePath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
@@ -46,9 +72,12 @@ class wordclock:
             # must be created first
             import wx        
             self.app = wx.App()
+        self.config = loadConfig(self.basePath)
 
         # Create object to interact with the wordclock using the interface of your choice
         self.wci = wci.event_handler()
+
+        self.developer_mode_active = self.config.getboolean('wordclock', 'developer_mode')
 
         if not self.developer_mode_active:
             import wordclock_interfaces.gpio_interface as wcigpio
@@ -74,10 +103,10 @@ class wordclock:
             # Check the config-file, whether to activate or deactivate the plugin
             try:
                 if not self.config.getboolean('plugin_' + plugin, 'activate'):
-                    print('Skipping plugin ' + plugin + ' since it is set to activate=false in the config-file.')
+                    logging.info('Skipping plugin ' + plugin + ' since it is set to activate=false in the config-file.')
                     continue
             except:
-                print('  INFO: No activate-flag set for plugin ' + plugin + ' within the config-file. Will be imported.')
+                logging.debug('No activate-flag set for plugin ' + plugin + ' within the config-file. Will be imported.')
 
             try:
                 # Perform a minimal (!) validity check
@@ -87,13 +116,13 @@ class wordclock:
                 self.plugins.append(import_module('wordclock_plugins.' + plugin + '.plugin').plugin(self.config))
                 # Search for default plugin to display the time
                 if plugin == 'time_default':
-                    print('  Selected "' + plugin + '" as default plugin')
+                    logging.info('Selected "' + plugin + '" as default plugin')
                     self.default_plugin = index
-                print('Imported plugin ' + str(index) + ': "' + plugin + '".')
+                logging.info('Imported plugin ' + str(index) + ': "' + plugin + '".')
                 index += 1
             except Exception as e:
                 print(e)
-                print('Failed to import plugin ' + plugin + '!')
+                logging.warning('Failed to import plugin ' + plugin + '!')
 
         # Create object to interact with the wordclock using the interface of your choice
         self.plugin_index = 0
@@ -115,14 +144,15 @@ class wordclock:
         """
         Runs the currently selected plugin
         """
+        logging.info('Running plugin ' + self.plugins[self.plugin_index].name + '.')
+        self.plugins[self.plugin_index].run(self.wcd, self.wci)
 
-        try:
-	    print('Running plugin ' + self.plugins[self.plugin_index].name + '.')
-	    self.plugins[self.plugin_index].run(self.wcd, self.wci)
-        except Exception as e:
-            print(e)
-            print('ERROR: In plugin ' + self.plugins[self.plugin_index].name + '.')
-            self.wcd.setImage(os.path.join(self.pathToGeneralIcons, 'error.png'))
+        #try:
+	    #    logging.info('Running plugin ' + self.plugins[self.plugin_index].name + '.')
+	    #    self.plugins[self.plugin_index].run(self.wcd, self.wci)
+        #except:
+        #    logging.error('Error in plugin ' + self.plugins[self.plugin_index].name + '.')
+        #    self.wcd.setImage(os.path.join(self.pathToGeneralIcons, 'error.png'))
 
         # Cleanup display after exiting plugin
         self.wcd.resetDisplay()
@@ -171,11 +201,12 @@ class wordclock:
         self.startup()        
         self.run()
 
+if __name__ == '__main__':
 
-if __name__ == '__main__':    
-    #word_clock = wordclock()
-    #word_clock.startup()
-    #word_clock.run()
+    # Setup logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+
+    # Run the word clock
     word_clock = wordclock()
     developer_mode = word_clock.developer_mode_active
     if not developer_mode:

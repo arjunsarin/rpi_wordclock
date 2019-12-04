@@ -1,10 +1,7 @@
 import os
 import time
 
-try:
-    from neopixel import Color
-except:
-    from WXcolors import Color
+import wordclock_tools.wordclock_colors as wcc
 
 class plugin:
     """
@@ -26,12 +23,20 @@ class plugin:
         """
         while True:
             """Reset all LEDs"""
-            wcd.setColorToAll(Color(0,0,0), includeMinutes=True)
+            wcd.setColorToAll(wcc.Color(0,0,0), includeMinutes=True)
             """Color wipe each LED to find the error"""
-            for i in range(wcd.get_led_count()):
-                wcd.setPixelColor(i, Color(255,0,0))
+            for i in range(wcd.get_led_count() - 4):
+                wcd.setColorBy1DCoordinates([i], wcc.Color(255,0,0))
                 wcd.show()
                 time.sleep(0.1)
                 if wci.waitForEvent(0.02) >= 0:
+                    return
+            for i in range(4):
+                wcd.setMinute(i, wcc.Color(255,0,0))
+                wcd.show()
+                time.sleep(0.1)
+                if wci.waitForEvent(0.02) >= 0:
+                    return
+            if wci.waitForEvent(0.02) >= 0:
                     return
             time.sleep(10)
