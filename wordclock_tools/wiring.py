@@ -14,7 +14,7 @@ class wiring:
 
         # LED strip configuration:
         try:
-            language = ''.join(config.get('wordclock_display', 'language'))
+            language = ''.join(config.get('wordclock_display', 'stencil_language'))
         except:
             # For backward compatibility
             language = ''.join(config.get('plugin_time_default', 'language'))
