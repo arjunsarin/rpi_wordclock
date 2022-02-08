@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import wordclock_tools.wordclock_colors as wcc
+import wordclock_tools.wordclock_display as wcd
 
 
 class plugin:
@@ -32,7 +33,7 @@ class plugin:
 
         self.animation_speed = config.getint('plugin_' + self.name, 'animation_speed')
 
-        self.animate_seconds = config.getboolean('plugin_time_default', 'animate_seconds')
+        self.play_animation_each_minute = config.getboolean('plugin_time_default', 'play_animation_each_minute')
         self.purist = config.getboolean('plugin_time_default', 'purist')
 
         self.sleep_begin = datetime.datetime.strptime(config.get('plugin_' + self.name, 'sleep_begin'), '%H:%M').time()
@@ -159,6 +160,15 @@ class plugin:
                 except IOError as e:
                     print(e)
 
+            # Check if text needs to be displayed
+            if wcc.scrollenable:
+                try:
+                    if datetime.datetime.now() > wcc.scrolldatetime:
+                        wcd.showText(wcc.scrolltext)
+                        wcc.scrolldatetime = wcc.scrolldatetime + datetime.timedelta(seconds = wcc.scrollrepeat)
+                except:
+                    print("Date and time not set")
+
             # Check, if a minute has passed (to render the new time)
             if prev_min < now.minute:
                 sleepActive = \
@@ -169,10 +179,11 @@ class plugin:
                 wcd.setBrightness(self.sleep_brightness if sleepActive else newBrightness)
  
                 # Set background color
-                if self.animate_seconds:
+                if self.play_animation_each_minute:
                     animation = self.animation
                 else:
                     animation = self.animation if now.minute%5 == 0 else 'None'
+
                 self.show_time(wcd, wci, animation, animation_speed=self.animation_speed)
                 prev_min = -1 if now.minute == 59 else now.minute
 
