@@ -55,6 +55,8 @@ class wiring:
             self.wcl = micro_net_wiring(self.WCA_WIDTH, self.WCA_HEIGHT)
         elif wiring_layout == 'webdisaster_wiring':
             self.wcl = webdisaster_wiring(self.WCA_WIDTH, self.WCA_HEIGHT)
+        elif wiring_layout == 'arjuns_wiring':
+            self.wcl = arjuns_wiring(self.WCA_WIDTH, self.WCA_HEIGHT)
         else:
             print('Warning: No valid wiring layout found. Falling back to default!')
             self.wcl = bernds_wiring(self.WCA_WIDTH, self.WCA_HEIGHT)
@@ -512,3 +514,24 @@ class webdisaster_wiring:
             print(min)
             return 0
 
+class arjuns_wiring:
+    def __init__(self, WCA_WIDTH, WCA_HEIGHT):
+        self.WCA_WIDTH = WCA_WIDTH
+        self.WCA_HEIGHT = WCA_HEIGHT
+        self.LED_COUNT = self.WCA_WIDTH * self.WCA_HEIGHT + 4
+
+    def getStripIndexFrom2D(self, x, y):
+        if x % 2 == 0:
+            return self.WCA_HEIGHT*x + (self.WCA_HEIGHT-y) + 2 - 1
+        else:
+            return self.WCA_HEIGHT*x + y + 2
+
+    def mapMinutes(self, min):
+        if min == 1:
+            return 0
+        elif min == 2:
+            return 1
+        elif min == 3:
+            return self.LED_COUNT - 2
+        elif min == 4:
+            return self.LED_COUNT - 1
